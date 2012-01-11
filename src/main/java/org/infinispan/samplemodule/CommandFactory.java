@@ -1,7 +1,9 @@
 package org.infinispan.samplemodule;
 
 import org.infinispan.commands.ReplicableCommand;
+import org.infinispan.commands.module.ExtendedModuleCommandFactory;
 import org.infinispan.commands.module.ModuleCommandFactory;
+import org.infinispan.commands.remote.CacheRpcCommand;
 import org.infinispan.samplemodule.commands.nonvisitable.PerformGCCommand;
 import org.infinispan.samplemodule.commands.visitable.BulkDeleteCommand;
 import org.infinispan.samplemodule.commands.visitable.PrintContentsCommand;
@@ -15,7 +17,7 @@ import java.util.Map;
  * @author Manik Surtani
  * @since 5.0
  */
-public class CommandFactory implements ModuleCommandFactory {
+public class CommandFactory implements ExtendedModuleCommandFactory {
 
    @Override
    public Map<Byte, Class<? extends ReplicableCommand>> getModuleCommands() {
@@ -30,12 +32,6 @@ public class CommandFactory implements ModuleCommandFactory {
    public ReplicableCommand fromStream(byte commandId, Object[] args) {
       ReplicableCommand c;
       switch (commandId) {
-         case BulkDeleteCommand.COMMAND_ID:
-            c = new BulkDeleteCommand();
-            break;
-         case PrintContentsCommand.COMMAND_ID:
-            c = new PrintContentsCommand();
-            break;
          case PerformGCCommand.COMMAND_ID:
             c = new PerformGCCommand();
             break;
@@ -45,4 +41,22 @@ public class CommandFactory implements ModuleCommandFactory {
       c.setParameters(commandId, args);
       return c;
    }
+
+   @Override
+   public CacheRpcCommand fromStream(byte commandId, Object[] args, String cacheName) {
+      CacheRpcCommand c;
+      switch (commandId) {
+         case BulkDeleteCommand.COMMAND_ID:
+            c = new BulkDeleteCommand(cacheName);
+            break;
+         case PrintContentsCommand.COMMAND_ID:
+            c = new PrintContentsCommand(cacheName);
+            break;
+         default:
+            throw new IllegalArgumentException("Not registered to handle command id " + commandId);
+      }
+      c.setParameters(commandId, args);
+      return c;
+   }
+
 }

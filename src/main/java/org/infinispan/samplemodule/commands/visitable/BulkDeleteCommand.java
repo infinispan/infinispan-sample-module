@@ -3,8 +3,10 @@ package org.infinispan.samplemodule.commands.visitable;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.Visitor;
+import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.container.DataContainer;
 import org.infinispan.context.InvocationContext;
+import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.samplemodule.visitors.SampleModuleVisitor;
 
 /**
@@ -13,7 +15,7 @@ import org.infinispan.samplemodule.visitors.SampleModuleVisitor;
  * @author Manik Surtani
  * @since 5.0
  */
-public class BulkDeleteCommand implements VisitableCommand {
+public class BulkDeleteCommand extends BaseRpcCommand implements VisitableCommand {
 
    public static final byte COMMAND_ID = 102;
 
@@ -21,16 +23,22 @@ public class BulkDeleteCommand implements VisitableCommand {
    private String regexPattern;
 
    /**
-    * Need an empty ctor to facilitate deserialisation
+    * Ctor with regex pattern and cache name
+    *
+    * @param cacheName cache name
     */
-   public BulkDeleteCommand() {
+   public BulkDeleteCommand(String cacheName) {
+      super(cacheName);
    }
 
    /**
     * Ctor with any components needed, so the {@link CommandsFactory} can easily inject dependencies.
+    *
     * @param dataContainer data container
+    * @param cacheName cache name
     */
-   public BulkDeleteCommand(DataContainer dataContainer, String regexPattern) {
+   public BulkDeleteCommand(DataContainer dataContainer, String regexPattern, String cacheName) {
+      super(cacheName);
       this.dataContainer = dataContainer;
       this.regexPattern = regexPattern;
    }
@@ -62,6 +70,11 @@ public class BulkDeleteCommand implements VisitableCommand {
    }
 
    @Override
+   public boolean ignoreCommandOnStatus(ComponentStatus status) {
+      return false;
+   }
+
+   @Override
    public Object perform(InvocationContext ctx) throws Throwable {
       for (Object key: dataContainer.keySet()) {
          if (key.toString().matches(regexPattern))
@@ -85,4 +98,10 @@ public class BulkDeleteCommand implements VisitableCommand {
    public void setParameters(int commandId, Object[] parameters) {
       regexPattern = parameters[0].toString();
    }
+
+   @Override
+   public boolean isReturnValueExpected() {
+      return false;  // TODO: Customise this generated block
+   }
+
 }

@@ -59,4 +59,10 @@ public class PerformGCCommand implements ReplicableCommand {
    @Override
    public void setParameters(int commandId, Object[] parameters) {
    }
+
+   @Override
+   public boolean isReturnValueExpected() {
+      return false;  // TODO: Customise this generated block
+   }
+
 }

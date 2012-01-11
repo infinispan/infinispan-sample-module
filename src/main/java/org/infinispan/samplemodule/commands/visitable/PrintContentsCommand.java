@@ -3,8 +3,10 @@ package org.infinispan.samplemodule.commands.visitable;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.Visitor;
+import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.container.DataContainer;
 import org.infinispan.context.InvocationContext;
+import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.samplemodule.visitors.SampleModuleVisitor;
 
 /**
@@ -13,23 +15,29 @@ import org.infinispan.samplemodule.visitors.SampleModuleVisitor;
  * @author Manik Surtani
  * @since 5.0
  */
-public class PrintContentsCommand implements VisitableCommand {
+public class PrintContentsCommand extends BaseRpcCommand implements VisitableCommand {
 
    public static final byte COMMAND_ID = 101;
 
    private DataContainer dataContainer;
 
    /**
-    * Need an empty ctor to facilitate deserialisation
+    * Ctor with cache name
+    *
+    * @param cacheName cache name
     */
-   public PrintContentsCommand() {
+   public PrintContentsCommand(String cacheName) {
+      super(cacheName);
    }
 
    /**
     * Ctor with any components needed, so the {@link CommandsFactory} can easily inject dependencies.
+    *
     * @param dataContainer data container
+    * @param cacheName cache name
     */
-   public PrintContentsCommand(DataContainer dataContainer) {
+   public PrintContentsCommand(DataContainer dataContainer, String cacheName) {
+      super(cacheName);
       injectComponents(dataContainer);
    }
 
@@ -56,6 +64,18 @@ public class PrintContentsCommand implements VisitableCommand {
    }
 
    @Override
+   public boolean ignoreCommandOnStatus(ComponentStatus status) {
+      switch (status) {
+         case FAILED:
+         case STOPPING:
+         case TERMINATED:
+            return true;
+         default:
+            return false;
+      }
+   }
+
+   @Override
    public Object perform(InvocationContext ctx) throws Throwable {
       return String.format("Contents of the cache (%s keys):%n%s", dataContainer.size(), dataContainer.keySet());
    }
@@ -73,4 +93,10 @@ public class PrintContentsCommand implements VisitableCommand {
    @Override
    public void setParameters(int commandId, Object[] parameters) {
    }
+
+   @Override
+   public boolean isReturnValueExpected() {
+      return true;
+   }
+
 }

@@ -26,13 +26,13 @@ public class SampleModuleInterceptor extends CommandInterceptor implements Sampl
    @Override
    public Object visitPrintContentsCommand(InvocationContext ctx, PrintContentsCommand command) throws Throwable {
       Object o = super.invokeNextInterceptor(ctx, command);
-      log.info("Cache contents are %s", o);
+      getLog().infof("Cache contents are %s", o);
       return o;
    }
 
    @Override
    public Object visitBulkDeleteCommand(InvocationContext ctx, BulkDeleteCommand command) throws Throwable {
-      log.debug("Bulk-deleting String keys that match regular expression %s", command.getPattern());
+      getLog().debugf("Bulk-deleting String keys that match regular expression %s", command.getPattern());
 
       if (ctx.isOriginLocal()) {
          // Note that the usual replication interceptor will not handle this new command!  So we'd need to replicate it here if needed.

@@ -55,11 +55,14 @@ public class SampleModuleDecorator<K, V> {
    public void bulkDelete(String pattern) {
       if (pattern == null || pattern.length() == 0) throw new IllegalArgumentException("Pattern cannot be null or blank");
       BulkDeleteCommand c = commandBuilder.buildBulkDeleteCommand(pattern);
-      invoker.invoke(invocationContextContainer.createInvocationContext(), c);
+      // The number of entries is not limited to 10, but this
+      // guarantees a decent size to initialise the context with
+      invoker.invoke(invocationContextContainer.createInvocationContext(true, 10), c);
    }
 
    public void printCacheContents() {
       PrintContentsCommand c = commandBuilder.buildPrintContentsCommand();
-      invoker.invoke(invocationContextContainer.createInvocationContext(), c);
+      invoker.invoke(invocationContextContainer.createInvocationContext(false, 0), c);
    }
+
 }

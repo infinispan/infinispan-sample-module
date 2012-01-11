@@ -1,5 +1,6 @@
 package org.infinispan.samplemodule;
 
+import org.infinispan.Cache;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ModuleCommandInitializer;
 import org.infinispan.container.DataContainer;
@@ -19,19 +20,21 @@ public class CommandInitializer implements ModuleCommandInitializer {
 
    private DistributionManager distributionManager;
    private DataContainer dataContainer;
+   private String cacheName;
 
    @Inject
-   public void inject(DistributionManager distributionManager, DataContainer dataContainer) {
+   public void inject(DistributionManager distributionManager, DataContainer dataContainer, Cache cache) {
       this.distributionManager = distributionManager;
       this.dataContainer = dataContainer;
+      this.cacheName = cache.getName();
    }
 
    public BulkDeleteCommand buildBulkDeleteCommand(String pattern) {
-      return new BulkDeleteCommand(dataContainer, pattern);
+      return new BulkDeleteCommand(dataContainer, pattern, cacheName);
    }
 
    public PrintContentsCommand buildPrintContentsCommand() {
-      return new PrintContentsCommand(dataContainer);
+      return new PrintContentsCommand(dataContainer, cacheName);
    }
 
    public PerformGCCommand buildPerformGCCommand() {
